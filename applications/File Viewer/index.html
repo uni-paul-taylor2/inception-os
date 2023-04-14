@@ -1,0 +1,136 @@
+<html>
+  <head>
+    <style>
+      body{
+        background-color: #dddddd;
+      }
+      table{
+        border-collapse: collapse;
+        width: 100%;
+        max-width: 500px;
+      }
+      th,td{
+        width: 80px;
+        border: 1px solid black;
+        margin: 0px;
+        text-align: left;
+      }
+      .file{
+        background-color: yellowgreen;
+      }
+      .folder{
+        cursor: pointer;
+        background-color: deepskyblue;
+      }
+      span{
+        cursor: pointer;
+        float: right;
+        height: 100%;
+        width: 20%;
+      }
+      p{
+        width: 75%;
+        margin: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <b><code id="dir"></code></b>
+    <br><br>
+    <table>
+      <thead>
+        <tr>
+          <th><p>Name</p><span id="names"><i>asc</i></span></th>
+          <th><p>Extension</p><span id="exts"><i>none</i></span></th>
+          <th><p>Size</p><span id="sizes"><i>none</i></span></th>
+        </tr>
+      </thead>
+      <tbody id="content"></tbody>
+    </table>
+    <script>
+      let getID=id=>document.getElementById(id);
+      let content=getID('content'), dir=getID('dir')
+      let names=getID('names'), exts=getID('exts'), sizes=getID('sizes')
+      let orderers=[names,exts,sizes]
+      function listen(elem,binary=false){
+        var states=binary?({asc:'dsc',dsc:'asc',none:'asc'}):({asc:'dsc',dsc:'none',none:'asc'});
+        elem.onclick=function(){
+          selected=elem;
+          elem.innerText=states[elem.innerText];
+          orderers.forEach(el=>{ if(el!==elem)el.innerText="none"; })
+          printDir(elem)
+        }
+      }
+      listen(names,true); listen(exts); listen(sizes);
+      let DIR=[], list=null, display=null, selected=names;
+      function sizeStr(bytes=0){
+        let i=0, max=5
+        let sizes=[2**0,2**10,2**20,2**30,2**40], names=['B','KB','MB','GB','TB']
+        while(i<max&&sizes[i]<bytes) i++;
+        return Number((bytes/sizes[i-1]).toFixed(2))+' '+names[i-1];
+      }
+      function listDir(){
+        (display=[], list=controls.readFolder(DIR.join('/')));
+        Object.keys(list).forEach(key=>{
+          let temp=key.split('.')
+          let ext=temp.splice(temp.length-1,1)[0], file=temp.join('.')
+          let tr=document.createElement('tr')
+          let NAME=document.createElement('td')
+          let EXTENSION=document.createElement('td')
+          let SIZE=document.createElement('td')
+          tr.append(NAME,EXTENSION,SIZE)
+          tr.title=key
+          NAME.innerText=key
+          SIZE.innerText=sizeStr(list[key].size)
+          //SIZE.innerText=list[key].size+' Bytes'
+          if(list[key].isFolder){
+            (temp=file, file=ext, ext=temp);
+            tr.classList.add('folder')
+            tr.onclick=function(){ (DIR.push(key),listDir()) }
+          }
+          else{
+            tr.classList.add('file')
+            EXTENSION.innerText=ext.toUpperCase()
+            tr.onclick=function(){ controls.spawn('Notepad',controls.read(DIR.join('/')+'/'+key)) }
+          }
+          display.push({file,ext,size:list[key].size,element:tr});
+        })
+        printDir(selected)
+      }
+      let sorters=[
+        (a,b)=>a.file.localeCompare(b.file), //file alphabet ascending
+        (a,b)=>b.file.localeCompare(a.file), //file alphabet descending
+        (a,b)=>a.ext.localeCompare(b.ext), //ext alphabet ascending
+        (a,b)=>b.ext.localeCompare(a.ext), //ext alphabet descending
+        (a,b)=>a.size-b.size, //size ascending
+        (a,b)=>b.size-a.size //size descending
+      ]
+      function printDir(elem){
+        dir.innerText="@root://"+DIR.join('/');
+        if(display.length>1){ //sort array
+          let index=0;
+          if(elem.innerText!=="none")
+            index=(2*orderers.indexOf(elem))+Number(elem.innerText==='dsc');
+          if(index===0&&names.innerText!=='asc') names.innerText='asc';
+          display.sort(sorters[index])
+        }
+        content.innerHTML=''; //empty content
+        if(DIR.length>0){ //print go back button
+          let back=document.createElement('tr')
+          let NAME=document.createElement('td')
+          let extra1=document.createElement('td')
+          let extra2=document.createElement('td')
+          back.classList.add('folder')
+          back.onclick=function(){ (DIR.splice(DIR.length-1,1),listDir()) }
+          back.title='back 1 level';
+          back.append(NAME,extra1,extra2);
+          let dot=String.fromCharCode(8226);
+          NAME.innerText=dot+' '+dot;
+          content.appendChild(back)
+        }
+        display.forEach(part=> content.appendChild(part.element) ) //print every other folder/file
+      }
+      listDir()
+    </script>
+  </body>
+</html>

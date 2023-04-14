@@ -1,0 +1,14 @@
+{
+  "name": "inception-os",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["web","web-app","inception","desktop","os"],
+  "author": "Munstas Inc.",
+  "license": "ISC",
+  "dependencies": {}
+}

@@ -1,0 +1,5 @@
+{
+  "name": "Tic-tac-toe",
+  "author": "Munstas Inc.",
+  "permissions": ["prompts","global read","global write","process spawn"]
+}

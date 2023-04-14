@@ -1,0 +1,5 @@
+{
+  "name": "Calculator",
+  "author": "Munstas Inc.",
+  "permissions": ["global read","global write","process spawn"]
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    #menu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    button {
+      margin: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      background-color: #3498db;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+    #board-container {
+      display: none;
+      width: 300px;
+      height: 300px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      grid-gap: 2px;
+      margin: 0 auto;
+      background-color: #ecf0f1;
+      border-radius: 0.25rem;
+    }
+    .square {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      font-weight: bold;
+      color: #3498db;
+      background-color: white;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    #rules {
+      display: none;
+    }
+    #back-button {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <h1>Tic Tac Toe</h1>
+    <button id="play-button">Play</button>
+    <button id="rules-button">Rules</button>
+  </div>
+
+  <div id="board-container"></div>
+
+  <div id="rules">
+    <h2>How to Play</h2>
+    <p>Tic Tac Toe is a two-player game where the objective is to get three in a row.</p>
+    <p>Players take turns placing their mark (X or O) on the board.</p>
+    <p>The game ends when one player gets three in a row or all squares are filled.</p>
+    <button id="back-button">Back</button>
+  </div>
+
+  <div id="reset-container">
+    <button id="reset-button">Reset Game</button>
+  </div>
+
+  <script>
+    // Set up game variables
+let currentPlayer = 'X';
+let gameBoard = ['', '', '', '', '', '', '', '', ''];
+
+// Draw game board
+function drawBoard() {
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      const square = document.getElementById(`square-${i}-${j}`);
+      square.textContent = gameBoard[i * 3 + j];
+    }
+  }
+}
+
+// Check for a win or draw
+function checkWin() {
+  
+  const winCombos = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+
+  for (let i = 0; i < winCombos.length; i++) {
+    const [a, b, c] = winCombos[i];
+    if (gameBoard[a] !== '' && gameBoard[a] === gameBoard[b] && gameBoard[b] === gameBoard[c]) {
+      return setTimeout(_=> (alert(`Player ${currentPlayer} Lost!`),resetGame()) ,10)
+      //console.log("Wond");
+      //return;
+    }
+  }
+
+  if (!gameBoard.includes('')) {
+    alert('It\'s a draw!');
+    resetGame();
+  }
+}
+
+// Set up event listener for square clicks
+function handleClick(event) {
+	let index = 0;
+  const row = event.target.dataset.row;
+  const col = event.target.dataset.col;
+  index = 3*row + 1*col;
+  console.log(index);
+
+  if (gameBoard[index] === '') {
+    gameBoard[index] = currentPlayer;
+    drawBoard();
+    checkWin();
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  }
+}
+
+// Reset the game board
+function resetGame() {
+  gameBoard = ['', '', '', '', '', '', '', '', ''];
+  drawBoard();
+}
+
+// Draw initial game board
+const boardContainer = document.getElementById('board-container');
+for (let i = 0; i < 3; i++) {
+  for (let j = 0; j < 3; j++) {
+    const square = document.createElement('div');
+    square.classList.add('square');
+    square.setAttribute('id', `square-${i}-${j}`);
+    square.setAttribute('data-row', i);
+    square.setAttribute('data-col', j);
+    square.addEventListener("click", handleClick);
+    boardContainer.appendChild(square);
+  }
+}
+
+// Set up menu
+const menu = document.querySelector('#menu');
+const playButton = document.querySelector('#play-button');
+const rulesButton = document.querySelector('#rules-button');
+const backButton = document.querySelector('#back-button');
+
+// Hide menu and show game board on play button click
+playButton.addEventListener('click', event => {
+  menu.style.display = 'none';
+  boardContainer.style.display = 'grid';
+});
+
+// Show rules on rules button click
+rulesButton.addEventListener('click', event => {
+  menu.style.display = 'none';
+  const rules = document.querySelector('#rules');
+  rules.style.display = 'block';
+});
+
+// Hide rules and show menu on back button click
+backButton.addEventListener('click', event => {
+  const rules = document.querySelector('#rules');
+  rules.style.display = 'none';
+  boardContainer.style.display = 'none';
+  menu.style.display = 'flex';
+});
+
+// Reset game on button click
+const resetButton = document.querySelector('#reset-button');
+resetButton.addEventListener('click', resetGame);
+
+
+  </script>
+</body>
+</html>

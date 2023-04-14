@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <style>
+      *{
+        background-color: #8493dc;
+        font-family: sans-serif;
+        color: white;
+      }
+      
+      h1{
+      	text-align: center;
+      
+      }
+      
+      #stopwatch{
+      	text-align:center;
+        font-size: 2em;
+      
+      }
+      button{
+        background:$base-color;
+        color:$white;
+        border: solid 1px white;
+        text-decoration:none;
+        cursor:pointer;
+        font-size:1.2em;
+        padding:18px 10px;
+        width:180px;
+        margin: 10px;
+
+	}
+    
+    button:hover{
+    	color:black;
+        background-color:white;
+    
+    }
+    .wrapper {
+      width: 800px;
+      margin: 30px auto;
+      color: white;
+      text-align:center;
+     }
+}
+
+    </style>
+  </head>
+  
+  <body>
+  	<div class="wrapper">
+      <h1> Stop Watch </h1>
+      <div id="stopwatch">00:00:00</div>
+      <br>
+      <button id="startBtn">Start</button>
+      <button id="stopBtn">Stop</button>
+      <button id="resetBtn">Reset</button>
+     </div>
+  </body>
+  <script>
+    // Get elements
+    const stopwatch = document.getElementById('stopwatch');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // Initialize variables
+    let startTime, elapsedTime = 0, timerInterval;
+    
+    // Format time in HH:MM:SS format
+    function formatTime(time) {
+      const hours = Math.floor(time / 3600);
+      const minutes = Math.floor((time - (hours * 3600)) / 60);
+      const seconds = time - (hours * 3600) - (minutes * 60);
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // Start stopwatch
+    function startTimer() {
+      startTime = Date.now() - elapsedTime;
+      timerInterval = setInterval(() => {
+        elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        stopwatch.innerHTML = formatTime(elapsedTime);
+      }, 1000);
+    }
+    
+    // Stop stopwatch
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+    
+    // Reset stopwatch
+    function resetTimer() {
+      clearInterval(timerInterval);
+      elapsedTime = 0;
+      stopwatch.innerHTML = '00:00:00';
+    }
+    
+    // Event listeners
+    startBtn.addEventListener('click', startTimer);
+    stopBtn.addEventListener('click', stopTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+  </script>
+</html>
+
+

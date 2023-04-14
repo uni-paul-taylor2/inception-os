@@ -1,0 +1,236 @@
+<html>
+  <head>
+ <link href ="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"/>
+    
+    <title> Epico </title>
+  </head>
+ <style>
+	
+    *{
+		font-family: sans-serif;
+/*         background-color: #4f65cd; */
+        color: white;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        overflow: none;
+	}
+   body{
+     display: flex;
+     background: linear-gradient(135deg, #4f65cd 0%, #e6b1f9 60%, #cad1f0 100%);
+     justify-content:center;
+      align-items: center;
+     padding: 0px;
+     margin: 0px;
+     border: none;
+   }
+   
+   .container-search{
+   		display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+   }
+   
+   iframe{
+   	display:none;
+    height:100%;
+    width: 100%;
+    overflow: none;
+     margin: 0px;
+     padding: 0px;
+     border: none;
+   }
+
+
+   .input-box{
+     width: 100%;
+     height:35px;
+     display:flex ;
+     align-items:center;
+    background-color: white ;
+     border-radius:40px;
+     margin-bottom:20px;
+   }
+
+   #input-field{
+     width: 70vh;
+     height:30px;
+     border:none;
+     background-color: white;
+     font-size:18px;
+    outline:none;
+    color:black;
+   }
+
+  #input-btn{
+    padding: 8.5px,12px;
+    margin-right: 20px;
+    background-color: white;
+    background: white;
+    border: none;
+/*     border-top-right-radius:5px;
+    border-bottom-right-radius:5px; */
+  }
+
+   h1{
+     text-align:center;
+     margin-bottom:30px;
+     font-size 2rem;
+     
+   }
+  
+  .mini-btn{
+    margin-top:18px,0px;
+    text-align:center;
+  }
+
+   span{
+     margin: 10px 10px;
+     background-color: rgba(255,255,255,0.123);
+     padding: 5px,10px;
+     border-radius: 5px;
+    cursor:pointer;
+   }
+
+   }
+
+   .input-box>.fa-microphone{
+     color: #d4e0e4;
+     padding:0px,10px;
+     font-size:18px;
+     cursor:pointer;
+     left: 20px;
+   }
+
+   .input-box>.fa-search{
+     color: #d4e0e4;
+     background-color: white;
+     padding:0px,10px;
+     font-size:18px;
+
+     
+   }
+
+    .input-box>.fa-camera{
+      color: #d4e0e4;
+     padding:0px,10px;
+     font-size:18px;
+      cursor:pointer;
+    
+    }
+
+   .fa-search{
+     color: #d4e0e4;
+     font-size:18px;
+     font- weight:700;
+     cursor:pointer;
+     border:none;
+     
+   }
+  .fa-th {
+       position: absolute;
+       left: 94%;
+       font-size:20px;
+       top: 5px;
+       margin:12px;
+       cursor:pointer;
+  }
+
+  .fa-user-circle{
+     position: absolute;
+       left: 96%;
+       top: 5px;
+      font-size:20px;
+      margin:12px;
+      cursor:pointer;
+  }
+   #top-search{
+     width: 100%;
+     float: center;
+     position: absolute;
+     top: 0px;
+     color: black;
+   }
+   
+ </style>
+
+  
+  <body>
+     <input type="text" name="input" id="top-search" placeholder="Search Epico..."/>
+<div class="container-search">
+   <i class ="fas fa-th"></i>
+   <i class ="fas fa-user-circle"></i>
+  	<h1>EPICO</h1>
+     <div class="content">
+       
+       <div class="input-box">
+         <i class ="fas fa-microphone"></i>
+     <input type="text" name="input" id="input-field" placeholder="Search Epico..."/>
+       <button id ="input-btn" value="Search" style="color:black;"><i class="fas fa-search"></i></button>
+       </div>
+       <div class="mini-btn">
+         <span>EPICO Search </span>
+         <span>Check the recent searches</span>
+         
+       </div>
+     </div>
+</div>
+  
+    
+   <iframe id="iframe" src="about:blank" allow="fullscreen"></iframe>
+    <script>
+      //https://stackoverflow.com/a/8700754/10697213 is why we can't load google search engine inside iframe
+      //however the comment gave us a workaround using the "igu" search query parameter
+      //that said, yes a LOT of sites deny being loaded inside an iframe ;-;
+      console.log('loaded')
+    function urlFrom(input=""){
+      try{return new URL(input).href} //if is url, the url
+      catch{ //else, put it in google search engine
+        let url=new URL("https://www.google.com/search?igu=1")
+        url.searchParams.append('q',input)
+        return url.href
+      }
+    }
+    const input=document.getElementById('input-field')
+    input.onkeypress=e=>{
+      if(e.keyCode===13){
+        homepage.style.display = 'none';
+    	  iframe.style.display = "block";
+        let url=urlFrom(input.value);
+        input.value=url;
+        iframe.src=url;
+      }
+    }
+    const iframe=document.getElementById('iframe')
+    const homepage = document.getElementsByClassName('container-search')[0];
+    const search = document.getElementById('input-btn');
+    search.addEventListener("click", () => {
+    	homepage.style.display = 'none';
+    	iframe.style.display = "block";
+      iframe.src=urlFrom(input.value);
+    });
+    let secondInput=document.getElementById('top-search')
+    let s=setInterval(()=>{
+      iframe.style.top=secondInput.offsetHeight+'px';
+      iframe.style.width=document.body.offsetWidth+'px';
+      iframe.style.height=(document.body.offsetHeight-secondInput.offsetHeight)+'px';
+    },1)
+    secondInput.onkeypress=e=>{
+      if(e.keyCode===13){
+        homepage.style.display = 'none';
+    	  iframe.style.display = "block";
+        let url=urlFrom(secondInput.value);
+        secondInput.value=url;
+        iframe.src=url;
+      }
+    }
+    </script>
+  </body>
+  
+</html>

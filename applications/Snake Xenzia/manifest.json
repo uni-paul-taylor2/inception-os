@@ -1,0 +1,5 @@
+{
+  "name": "Snake Xenzia",
+  "author": "Munstas Inc.",
+  "permissions": ["global read","global write","process spawn"]
+}

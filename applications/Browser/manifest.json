@@ -1,0 +1,5 @@
+{
+  "name": "Browser",
+  "author": "Munstas Inc.",
+  "permissions": ["local read"]
+}

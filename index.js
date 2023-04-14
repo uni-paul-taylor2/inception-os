@@ -1,0 +1,47 @@
+let slash=process.platform=="win32"?"\\":"/", dir=__dirname+slash;
+var http=require('node:http'), fs=require('node:fs')
+let {REPL_ID}=process.env
+let html=fs.readFileSync(dir+'index.html')
+.toString().split('\\\\').join(`https://${REPL_ID}.id.repl.co`)
+let ab_map=[], str_map={__proto__:null}
+for(let i=0;i<256;i++){
+  ab_map.push(String.fromCharCode(i));
+  str_map[ab_map[i]]=i;
+}
+function str2ab(str) {
+  let buf=new ArrayBuffer(str.length), bufView=new Uint8Array(buf);
+  for (let i=0;i<str.length;i++) bufView[i]=str_map[str[i]];
+  return buf;
+}
+function ab2str(buf) {
+  let arr=new Uint8Array(buf), chars="";
+  for(let i=0;i<arr.length;i++) chars+=ab_map[arr[i]];
+  return chars;
+}
+
+let DEFAULT=dir+'default'+slash
+function read(path){
+  fs.lstatSync(path)
+  if(fs.lstatSync(path).isFile())
+    return ab2str(fs.readFileSync(path));
+  const folder={__proto__:null}
+  fs.readdirSync(path).forEach(part=> folder[part]=read(path+slash+part) )
+  return folder
+}
+const ASSETS=read(dir+'default')
+ASSETS['']=ab2str(fs.readFileSync(DEFAULT+'os.html'))
+ASSETS['applications']=read(dir+'applications')
+ASSETS.applications=JSON.stringify(ASSETS.applications)
+
+
+http.createServer(async function(req,res){
+  let isAsset=req.headers.host.startsWith(REPL_ID)
+  if(req.method==="GET"){
+    if(req.url[0]==='/') req.url=req.url.substring(1);
+    if(isAsset) res.write(ASSETS[req.url]||'');
+    else if(req.url==='') res.write(html);
+    else res.writeHead(301,{Location:"https://"+req.headers.host});
+  }
+  else res.write("what are you doing bruh??");
+  res.end()
+}).listen(8080)
