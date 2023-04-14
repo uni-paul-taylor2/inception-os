@@ -52,11 +52,14 @@ img{
 .pinned:hover{
 /*   background-color: lightgreen; */
 /*   background-color: purple; */
-  background-color: #9b82da;
+  background-color: #b9a5ee;
+  box-shadow: 0 0.5rem 1rem 0.3rem  #7663a4;
+  border-radius: 15px
 }
 .opened{
-  background-color: lightblue;
-/*   box-shadow: 0 0.5rem 1rem 0.4rem lightblue; */
+  background-color: #8cddfa;
+  box-shadow: 0 1rem 1rem 0.4rem #3f91ae;
+  border-radius: 15px
 }
 .ELEM{
   z-index: 1;
@@ -71,7 +74,7 @@ img{
   resize: both;
   position: absolute;
   background-color: #003f5a;
-  box-shadow: 0 0.5rem 1rem 0.2rem lightblue, 0 0.25rem 0.5rem 0.1rem #582FC1;
+  box-shadow: 0 0.5rem 1rem 0.2rem lightblue, 0 0.25rem 0.5rem 0.05rem #582FC1;
 }
 .max{
   width:100%;
