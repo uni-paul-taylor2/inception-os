@@ -215,8 +215,12 @@
     	iframe.style.display = "block";
       iframe.src=urlFrom(input.value);
     });
-    let secondInput=document.getElementById('top-search')
+    let secondInput=document.getElementById('top-search'), srcValue=iframe.src;
     let s=setInterval(()=>{
+      if(iframe.src!==srcValue){
+        srcValue=iframe.src;
+        secondInput.value=srcValue;
+      }
       iframe.style.top=secondInput.offsetHeight+'px';
       iframe.style.width=document.body.offsetWidth+'px';
       iframe.style.height=(document.body.offsetHeight-secondInput.offsetHeight)+'px';
@@ -225,9 +229,7 @@
       if(e.keyCode===13){
         homepage.style.display = 'none';
     	  iframe.style.display = "block";
-        let url=urlFrom(secondInput.value);
-        secondInput.value=url;
-        iframe.src=url;
+        iframe.src=urlFrom(secondInput.value);
       }
     }
     </script>

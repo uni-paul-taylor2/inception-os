@@ -7,7 +7,7 @@
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["web","web-app","inception","desktop","os"],
+  "keywords": ["desktop-app","website","web","web-app","inception","desktop","os"],
   "author": "Munstas Inc.",
   "license": "ISC",
   "dependencies": {}
