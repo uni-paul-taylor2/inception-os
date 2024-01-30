@@ -24,7 +24,7 @@ h1{
 #foot{
   bottom: 0px;
   width:100%;
-  height: 6%;
+  height: 5%;
   display: flex;
   position: absolute;
 /*   background-color: white; */
@@ -111,7 +111,7 @@ img{
   width: 100%;
   min-height: 90%;
 /*   max-height: 100%; */
-  height: 100vh;
+  height: 90vh;
   /*flex: 1 1 90%;*/
   background-color: white;
   

@@ -9,6 +9,6 @@
   },
   "keywords": ["desktop-app","website","web","web-app","inception","desktop","os"],
   "author": "Munstas Inc.",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {}
 }

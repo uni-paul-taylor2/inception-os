@@ -1,5 +1,5 @@
 {
   "name": "To Do List",
   "author": "Munstas Inc.",
-  "permissions": ["global read","global write","process spawn"]
+  "permissions": ["prompts","global read","global write","process spawn"]
 }

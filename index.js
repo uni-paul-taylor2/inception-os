@@ -35,13 +35,6 @@ ASSETS.applications=JSON.stringify(ASSETS.applications)
 
 
 http.createServer(async function(req,res){
-  let isAsset=req.headers.host.startsWith(REPL_ID)
-  if(req.method==="GET"){
-    if(req.url[0]==='/') req.url=req.url.substring(1);
-    if(isAsset) res.write(ASSETS[req.url]||'');
-    else if(req.url==='') res.write(html);
-    else res.writeHead(301,{Location:"https://"+req.headers.host});
-  }
-  else res.write("what are you doing bruh??");
-  res.end()
+  if(req.url[0]==="/") req.url=req.url.substr(1);
+  return res.end(ASSETS[req.url]||''); //simple server for now
 }).listen(8080)

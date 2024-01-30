@@ -1,3 +1,14 @@
+/*const bc = new BroadcastChannel("test_channel");
+bc.onmessage=console.warn
+let html=new Blob(["<html><head><script>window.x=25;console.log('working...');(new BroadcastChannel('test_channel')).postMessage('hiii')</script></head></html>"],{type:"text/html"})
+let iframe=document.createElement('iframe')
+iframe.src=URL.createObjectURL(html)
+document.body.appendChild(iframe)*/
+/*onmessage=console.warn
+let html=new Blob(["<html><head><script>window.x=25;console.log('working...');(window.parent).postMessage('hiii')</script></head></html>"],{type:"text/html"})
+let iframe=document.createElement('iframe')
+iframe.src=URL.createObjectURL(html)
+document.body.appendChild(iframe)*/
 (async()=>{ //so much code so u the marker can make ur own app on the browser OS and run it >:D
 //there is A LOT MORE that can be implemented visually due to the existing functionality in this file
 //process sandboxing is WEAK, no right click options, no settings bar, pin and unpin options
@@ -5,6 +16,7 @@
 //however the FOUNDATION to build all of that exists already as you can see ;-;
 if(window.LOADED) return null;
 window.LOADED=true;
+const version="1.0.0";
 //delete localStorage.files; delete localStorage.core; //still testing so don't wanna cache yet
 
 const clock = document.querySelector("#clock");
@@ -78,20 +90,18 @@ function taskbar(path){
   iconCache[path]=elem
   foot.appendChild(elem)
 }
-if(!localStorage.core){
+if(localStorage.version!==version){
   let css=await(await fetch(location.origin+'/style.css')).text()
   let desktop=await(await fetch(location.origin+'/desktop.json')).json()
   let perms=await(await fetch(location.origin+'/perms.json')).json()
   localStorage.core=JSON.stringify({desktop,css,perms})
-}
-if(!localStorage.files){
   localStorage.files=await(await fetch(location.origin+'/applications')).text()
+  localStorage.version=version;
 }
 const FILES=JSON.parse(localStorage.files), CORE=JSON.parse(localStorage.core), iconCache={__proto__:null}
 //setInterval(_=>{ delete localStorage.files; delete localStorage.core; },50) //still testing so don't wanna cache yet
 function factoryReset(){ //well we know what this does >:D
-  delete localStorage.files;
-  delete localStorage.core;
+  localStorage.clear();
   location.reload();
 }
 define(window,'SRC',function(path){
