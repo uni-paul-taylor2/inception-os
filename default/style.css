@@ -46,6 +46,9 @@ img{
   height: 100%;
   width: 3%;
 /*   background-color: teal; */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 70%;
   margin-left: 5px;
   margin-right: 5px;
 }
