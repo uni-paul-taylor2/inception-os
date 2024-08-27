@@ -10,15 +10,11 @@ let html=new Blob(["<html><head><script>window.x=25;console.log('working...');(w
 let iframe=document.createElement('iframe')
 iframe.src=URL.createObjectURL(html)
 document.body.appendChild(iframe)*/
-(async()=>{ //so much code so u the marker can make ur own app on the browser OS and run it >:D
-  //there is A LOT MORE that can be implemented visually due to the existing functionality in this file
-  //process sandboxing is WEAK, no right click options, no settings bar, pin and unpin options
-  //unfortunately, also no setting files by extension to open with a chosen program
-  //however the FOUNDATION to build all of that exists already as you can see ;-;
+(async()=>{ //note that folder paths DO NOT end in slash
   if(window.LOADED) return null;
   window.LOADED=true;
   const version="1.0.0";
-  //delete localStorage.files; delete localStorage.core; //still testing so don't wanna cache yet
+  //todo: separate UI from OS but firstly finish up processWrapper and spawnProcess
 
   const clock = document.querySelector("#clock");
   function displayTime() {
@@ -72,14 +68,13 @@ document.body.appendChild(iframe)*/
   }
   function taskbar(path){
     if(iconCache[path]) return null;
-    if(path.at(-1)!=='/') path+='/'; //have / at the end by force
     let elem=document.createElement('div')
     let background=getBackground(path)
     elem.id=BTOA(path)
     style.innerHTML+=`#${BTOA(path)}{background-image: url("${background}");\n`
     elem.classList.add('pinned')
     elem.onclick=function(){ spawnProcess(path) }
-    elem.title=path.split('/').at(-2)
+    elem.title=path.split('/').at(-1)
     iconCache[path]=elem
     foot.appendChild(elem)
   }
@@ -93,7 +88,6 @@ document.body.appendChild(iframe)*/
   }
   const CORE=JSON.parse(localStorage.core)
   const iconCache={__proto__:null}
-  //setInterval(_=>{ delete localStorage.files; delete localStorage.core; },50) //still testing so don't wanna cache yet
   define(window,'SRC',function(path){
     let data=readFile(path), ext=path.split('.').at(-1).toLowerCase()
     let url=URL.createObjectURL(new Blob([str2ab(data)],{type:mimeTypes[ext]||'text/plain'}))
@@ -107,30 +101,33 @@ document.body.appendChild(iframe)*/
   let {pinned}=CORE.desktop, foot=document.getElementById('foot')
   document.head.appendChild(style)
   pinned.forEach(app=> taskbar(app) )
-  function dragElement(elmnt,head,FRAME) { //adapted from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_draggable
-    let div=document.createElement('div'); //mask over iframe child that belongs completely to parent
-    div.style="display:none;width:100%;height:100%;opacity:0;background-color:transparent;z-index:200;position:absolute;";
+  function dragElement(elmnt,head) { //adapted from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_draggable
+    let div=document.createElement('div');
+    div.style="display:none;width:100%;height:100%;opacity:0;background-color:transparent;z-index:2147483647;position:absolute;";
     elmnt.prepend(div);
     setTimeout(_=> (elmnt.style.zIndex=++Z,front=elmnt) ,1)
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0, dragging = false;
     div.onmousedown = dragMouseDown;
     head.onmousedown = dragMouseDown;
     elmnt.onmousedown=function(){ (elmnt.style.zIndex=++Z,front=elmnt) }
+    //FRAME.document.addEventListener('click',elmnt.onclick)
+    //setTimeout(_=> FRAME.document.onclick=elmnt.onclick ,1)
     setInterval(function(){
       div.style.display=!dragging&&(front===elmnt)?"none":"initial";
     },50)
-    setTimeout(_=> FRAME.document.onclick=elmnt.onclick ,1)
     function dragMouseDown(e) {
       front = elmnt;
-      dragging = true
+      dragging = true;
       e ||= window.event;
       e.preventDefault();
+      //elmnt.style.zIndex=++Z;
+      // get the mouse cursor position at startup:
       pos3 = e.clientX;
       pos4 = e.clientY;
       div.style.display="initial";
-      section.onmouseup = closeDragElement;
-      section.onmouseleave = closeDragElement;
-      section.onmousemove = elementDrag;
+      section.onmouseup = closeDragElement; //document
+      section.onmouseleave = closeDragElement; //document
+      section.onmousemove = elementDrag; //document
     }
 
     function elementDrag(e) {
@@ -156,18 +153,24 @@ document.body.appendChild(iframe)*/
 
     function closeDragElement() {
       /* stop moving when mouse button is released:*/
+      div.style.display = "none";
       dragging = false;
-      div.style.display="none";
-      section.onmouseup = null;
-      section.onmousemove = null;
-      FRAME.document.onmousemove = null;
+      div.onmouseup = null;
+      div.onmousemove = null;
+      section.onmouseup = null; //document
+      section.onmousemove = null; //document
     }
   }
   //window stuff end
 
   //os stuff begin
-  const occupied=new Map();
-  function unOccupy(resource){occupied.delete(resource)}
+  //filesystem stuff start
+  const occupied=new Map(), updates=new Map();
+  function unOccupy(resource,file,operation){
+    //operation types w(writefile),wf(writefolder),  r(readfile),rf(readfolder)
+    occupied.delete(resource)
+    updates.get(resource)?.forEach(fn=>fn(file,operation))
+  }
   async function waitToOccupy(resource){
     if(occupied.has(resource)){
       await new Promise(r=>{
@@ -191,7 +194,7 @@ document.body.appendChild(iframe)*/
     folder[fileName]=data.length;
     localStorage["folders://"+folderPath]=JSON.stringify(folder);
     //the 2 lines above update the file's folder with the file info (length)
-    unOccupy(folderPath);
+    unOccupy(folderPath,fileName,"w");
     return true;
   }
   async function removeFile(path="unnamed.txt"){
@@ -203,7 +206,7 @@ document.body.appendChild(iframe)*/
     delete localStorage["files://"+path];
     delete folder[fileName];
     localStorage["folders://"+folderPath]=JSON.stringify(folder);
-    unOccupy(folderPath);
+    unOccupy(folderPath,fileName,"r");
     return true;
   }
   function readFolder(path=""){
@@ -220,14 +223,14 @@ document.body.appendChild(iframe)*/
     let folder=readFolder(path);
     folder[name]=-1; //"length" for a folder
     localStorage["folders://"+path]=JSON.stringify(folder);
-    unOccupy(path);
+    unOccupy(path,name,"wf");
     return true;
   }
   async function removeFolder(path="",name="unnamed folder"){
     if(typeof path!=="string" || typeof name!=="string") return false;
     const suffix=(path.length>0?path+'/':path)+name, fullPath="folders://"+suffix, folder=readFolder(path);
     if(!folder || name.includes('/') || !localStorage[fullPath]) return false;
-    await Promise.all([waitToOccupy(path),waitToOccupy(fullPath)]);
+    await waitToOccupy(path);
     let target=readFolder(suffix), keys=Object.keys(target);
     for(let i=0;i<keys.length;i++){
       if(target[keys[i]].length+1) await removeFile(suffix+"/"+keys[i]);
@@ -235,13 +238,14 @@ document.body.appendChild(iframe)*/
     }
     delete localStorage[fullPath];
     delete folder[name];
-    unOccupy(path); unOccupy(fullPath);
+    unOccupy(path,name,"rf");
   }
   function factoryReset(keepOS){ //well we know what this does >:D
     localStorage.clear();
     if(keepOS) localStorage.core=JSON.stringify(CORE);
     location.reload();
   }
+  //filesystem stuff stop
 
 
   const processes={__proto__:null} //each process has {path,name,author,permissions,startTime}
@@ -262,6 +266,13 @@ document.body.appendChild(iframe)*/
     "process kill": "grants app ability to kill other processes",
     "admin": "ridiculously op permission making u edit the core"
   }
+  function make_permissions(perms){
+    const permissions={__proto__:null}, keys=Object.keys(permissionList)
+    for(let i=0;i<keys.length;i++) permissions[keys[i]]=false;
+    for(let i=0;i<perms.length;i++) permissions[perms[i]]=true;
+    permissions['local read']=true
+    return permissions
+  }
   //todo: FRAME dragElement logic inside this function
   function enforcePermissions(WINDOW,permissions,key,channel,controls,original,localFiles){
     if(WINDOW.SANDBOXED) return true; //this window already sandboxed
@@ -271,6 +282,10 @@ document.body.appendChild(iframe)*/
     }
     freeze(Url);
     freeze(Url.prototype);
+    freeze(WINDOW.Event);
+    freeze(WINDOW.MessageEvent);
+    freeze(WINDOW.Event.prototype);
+    freeze(WINDOW.MessageEvent.prototype);
     define(WINDOW,"SANDBOXED",true);
     const bind=(WINDOW.Function.prototype.bind.call).bind(WINDOW.Function.prototype.bind);
 
@@ -284,9 +299,10 @@ document.body.appendChild(iframe)*/
       const requestIDSet=bind(requestIDs.set,requestIDs)
       const requestIDGet=bind(requestIDs.get,requestIDs)
       const requestIDDelete=bind(requestIDs.delete,requestIDs)
-      const {stringify}=JSON, postMessage=bind(channel.postMessage,channel)
+      const postMessage=bind(channel.postMessage,channel)
       WINDOW.setInterval(function(){postMessage(original)}, 1e3);
-      channel.onmessage=function(result){
+      channel.onmessage=function(ev){
+        const result=ev.data
         if(result[0] === 0)
           return localFiles[result[1][0]] = result[1][1];
         requestIDGet(result[0])(result[1])
@@ -305,6 +321,7 @@ document.body.appendChild(iframe)*/
         if(fileName[0]!=='/') fileName='/'+fileName;
         return localFiles[fileName]||"about:blank";
       })
+      define(controls,'exit',function(){ requester('process kill',[]) })
       if(permissions['local write']){
         define(controls,'local_write',async function(fileName,data){
           return await requester('local write',[fileName,data])
@@ -448,12 +465,13 @@ document.body.appendChild(iframe)*/
     if(!permissions['admin']&&!permissions['internet']){
       (delete WINDOW.WebSocket, delete WINDOW.open, delete WINDOW.Worker, delete WINDOW.SharedWorker);
       (delete WINDOW.RTCPeerConnection, delete WINDOW.webkitRTCPeerConnection);
+      WINDOW.addEventListener('beforeunload',function(){ controls.exit() })
     }
     if(!permissions['admin']&&!permissions['prompts']) (delete WINDOW.alert, delete WINDOW.prompt, delete WINDOW.confirm);
     define(WINDOW,'controls',controls); //controls for syscalls a process might do
   }
 
-  function processWrapper(ID,NAME,BACKGROUND){ //returns DOM element that u will put a process in
+  function processWrapper(ID,NAME,BACKGROUND,content){ //returns DOM element that u will put a process in
     let x=null, y=null, posX=null, posY=null, min=true, max=false, s=-1;
     let ELEM=document.createElement('div')
     let processHead=document.createElement('div')
@@ -516,16 +534,12 @@ document.body.appendChild(iframe)*/
   async function permissionManage(manifest){ //manages the permissions of an app
     //todo: put a display and let the user choose which permissions
     //what is done right now? grants all permissions ;-;
-    CORE.perms[manifest.name]={'local read':true}
-    manifest.permissions.forEach(perm=>{
-      CORE.perms[manifest.name][perm]=true
-    })
+    CORE.perms[manifest.name]=make_permissions(manifest.permissions)
     localStorage.core=JSON.stringify(CORE)
   }
   async function spawnProcess(path,arg=""){ //returns ID if successful
     let [curr,next]=traverse(path)
     let folder=curr[next]
-    if(path.at(-1)!=='/') path+='/'; //have / at the end by force
     if(typeof folder!=="object") throw 'must give folder of program';
     if(!folder['index.html'] || !folder['manifest.json'])
       throw 'given folder is not a program since a program needs "index.html" and "manifest.json"';
@@ -539,7 +553,7 @@ document.body.appendChild(iframe)*/
       throw "given folder is not a program since it doesn't have a 'background' image";
 
     if(!CORE.perms[manifest.name]) await permissionManage(manifest);
-    taskbar(path); CORE.perms[manifest.name]['local read']=true;
+    taskbar(path);
     iconCache[path].classList.add('opened')
     //iconCache[path].style="background-color: lightblue;";
     let ID=processes.length++, [ELEM,WINDOW]=processWrapper(ID,manifest.name,background), controls={__proto__:null};
