@@ -13,7 +13,6 @@ document.body.appendChild(iframe)*/
 (async()=>{ //note that folder paths DO NOT end in slash
   if(window.LOADED) return null;
   window.LOADED=true;
-  const version="1.0.0";
   //todo: separate UI from OS but firstly finish up processWrapper and spawnProcess
 
   const clock = document.querySelector("#clock");
@@ -23,7 +22,21 @@ document.body.appendChild(iframe)*/
     clock.innerHTML = day + " " + time;
   }
   displayTime()
-  setInterval(displayTime,1000);
+  setInterval(displayTime,1000)
+  
+  async function get(url){
+    return await(await fetch(location.origin+'/'+url)).text()
+  }
+  
+  //core loading start
+  const CORE=JSON.parse(localStorage.core)
+  if(!CORE.css) CORE.css=await get('style.css');
+  if(!CORE.perms) CORE.perms=await get('perms.json');
+  if(!CORE.desktop) CORE.desktop=await get('desktop.json');
+  localStorage.core = JSON.stringify(CORE);
+  //core loading stop
+
+  if(!localStorage.files) localStorage.files=await get('applications'); //apps loading
 
   //background image: https://wallpaper-mania.com/wp-content/uploads/2018/09/High_resolution_wallpaper_background_ID_77701347521.jpg
   //background image: https://img.freepik.com/free-photo/abstract-design-background-smooth-flowing-lines_1048-14640.jpg
@@ -78,15 +91,6 @@ document.body.appendChild(iframe)*/
     iconCache[path]=elem
     foot.appendChild(elem)
   }
-  if(localStorage.version!==version){
-    let css=await(await fetch(location.origin+'/style.css')).text()
-    let desktop=await(await fetch(location.origin+'/desktop.json')).json()
-    let perms=await(await fetch(location.origin+'/perms.json')).json()
-    localStorage.core=JSON.stringify({desktop,css,perms})
-    localStorage.files=await(await fetch(location.origin+'/applications')).text()
-    localStorage.version=version;
-  }
-  const CORE=JSON.parse(localStorage.core)
   const iconCache={__proto__:null}
   define(window,'SRC',function(path){
     let data=readFile(path), ext=path.split('.').at(-1).toLowerCase()
@@ -110,8 +114,6 @@ document.body.appendChild(iframe)*/
     div.onmousedown = dragMouseDown;
     head.onmousedown = dragMouseDown;
     elmnt.onmousedown=function(){ (elmnt.style.zIndex=++Z,front=elmnt) }
-    //FRAME.document.addEventListener('click',elmnt.onclick)
-    //setTimeout(_=> FRAME.document.onclick=elmnt.onclick ,1)
     setInterval(function(){
       div.style.display=!dragging&&(front===elmnt)?"none":"initial";
     },50)
@@ -120,7 +122,6 @@ document.body.appendChild(iframe)*/
       dragging = true;
       e ||= window.event;
       e.preventDefault();
-      //elmnt.style.zIndex=++Z;
       // get the mouse cursor position at startup:
       pos3 = e.clientX;
       pos4 = e.clientY;
@@ -165,6 +166,7 @@ document.body.appendChild(iframe)*/
 
   //os stuff begin
   //filesystem stuff start
+  //do note that the folder naming convention does NOT have / at the end of the folder name
   const occupied=new Map(), updates=new Map();
   function unOccupy(resource,file,operation){
     //operation types w(writefile),wf(writefolder),  r(readfile),rf(readfolder)
@@ -222,7 +224,7 @@ document.body.appendChild(iframe)*/
     localStorage[fullPath] = JSON.stringify({}); //metadata (empty)
     let folder=readFolder(path);
     folder[name]=-1; //"length" for a folder
-    localStorage["folders://"+path]=JSON.stringify(folder);
+    localStorage["folders://"+path]=JSON.stringify({});
     unOccupy(path,name,"wf");
     return true;
   }
@@ -247,7 +249,7 @@ document.body.appendChild(iframe)*/
   }
   //filesystem stuff stop
 
-
+  //process stuff start
   const processes={__proto__:null} //each process has {path,name,author,permissions,startTime}
   Object.defineProperty(processes,'length',{writable:true,configurable:false,value:0,enumerable:false})
   function invalidID(id){
@@ -274,8 +276,8 @@ document.body.appendChild(iframe)*/
     return permissions
   }
   //todo: FRAME dragElement logic inside this function
-  function enforcePermissions(WINDOW,permissions,key,channel,controls,original,localFiles){
-    if(WINDOW.SANDBOXED) return true; //this window already sandboxed
+  function enforcePermissions(WINDOW,permissions,channel,controls,original,localFiles){ //original and localFiles only get used in the initial WINDOW
+    if(WINDOW.SANDBOXED) return true; //this window is already sandboxed
     const {defineProperty,getOwnPropertyDescriptor:describe,freeze}=WINDOW.Object, {URL:Url}=WINDOW;
     function define(obj,key,data,type="value"){
       defineProperty(obj,key,{configurable:false,writable:false,[type]:data})
@@ -290,32 +292,38 @@ document.body.appendChild(iframe)*/
     const bind=(WINDOW.Function.prototype.bind.call).bind(WINDOW.Function.prototype.bind);
 
     //prerun setting up (the very first window before the start of the process)
+    //so this is SOME operating system interfacing being setup inside the process
     if(original){
       localFiles.__proto__ = null
       controls = {__proto__:null}
-      channel = new BroadcastChannel(key)
+      channel = new BroadcastChannel(original) //the 'original' variable is a secret, needless to say
       const {now}=Date, processEpoch=now()
       const requestIDs=new Map([[1,null]]), string=WINDOW.String
       const requestIDSet=bind(requestIDs.set,requestIDs)
       const requestIDGet=bind(requestIDs.get,requestIDs)
+      const requestIDHas=bind(requestIDs.has,requestIDs)
       const requestIDDelete=bind(requestIDs.delete,requestIDs)
       const postMessage=bind(channel.postMessage,channel)
       WINDOW.setInterval(function(){postMessage(original)}, 1e3);
+      //if the process is hanging, this above obviously this won't get called
+      //if 5 seconds go without a process doing this call, it has to exit
       channel.onmessage=function(ev){
-        const result=ev.data
-        if(result[0] === 0)
-          return localFiles[result[1][0]] = result[1][1];
-        requestIDGet(result[0])(result[1])
-        if(result[0] > processEpoch) requestIDDelete(result[0]); //result[0] is id, result[1] is data
+        const [id,data]=ev.data //result[0] is id, result[1] is data
+        //when id is 0, a new file is being added to the process' directory
+        if(id===0)
+          return localFiles[data[0]] = data[1]; //data when id is 0 is: [filename,contents]
+        //in the lines below, there maaaay be implementation of the requestIDs map being used by operating system made callbacks for things
+        //else there would be no if statement of id>processEpoch
+        requestIDGet(id)(data)
+        if(id>processEpoch) requestIDDelete(id);
       }
       async function requester(type="",args=[]){
         const id=now()
-        if(requestIDs[id]) throw 'Process limit of ONE syscall per millisecond exceeded';
+        if(requestIDHas(id)) throw 'Process limit of ONE syscall per millisecond exceeded';
         let work=null, prom=new Promise(r=>work=r)
         requestIDSet(id,work)
         postMessage([type,args,id])
-        let result=await prom;
-        return result;
+        return await prom
       }
       define(controls,'local_read',function(fileName){ //always granted
         if(fileName[0]!=='/') fileName='/'+fileName;
@@ -377,7 +385,7 @@ document.body.appendChild(iframe)*/
     const contentWindow=describe(WINDOW.HTMLIFrameElement.prototype,'contentWindow').get;
     define(WINDOW.HTMLIFrameElement.prototype,"contentWindow",function(){
       const subWindow=bind(contentWindow,this)()
-      enforcePermissions(subWindow,permissions,key,channel,controls)
+      enforcePermissions(subWindow,permissions,channel,controls)
       return subWindow
     })
 
@@ -471,7 +479,7 @@ document.body.appendChild(iframe)*/
     define(WINDOW,'controls',controls); //controls for syscalls a process might do
   }
 
-  function processWrapper(ID,NAME,BACKGROUND,content){ //returns DOM element that u will put a process in
+  function processWrapper(ID,NAME,BACKGROUND,src){ //returns DOM element that u will put a process in
     let x=null, y=null, posX=null, posY=null, min=true, max=false, s=-1;
     let ELEM=document.createElement('div')
     let processHead=document.createElement('div')
@@ -489,7 +497,7 @@ document.body.appendChild(iframe)*/
     close.classList.add('a_button')
 
     let icon = document.createElement('img')
-    icon.src = BACKGROUND;
+    icon.src = BACKGROUND
     ELEM.append(processHead,processBody)
     processHead.append(icon,bold,buttons)
     buttons.append(unMaximise,maximise,close) //more would come
@@ -525,25 +533,23 @@ document.body.appendChild(iframe)*/
       ELEM.style.height=x+'px';
       ELEM.style.width=y+'px';
     }
-    processBody.src='about:blank'
+    processBody.src=src
     document.getElementById('content').appendChild(ELEM)
-    processBody.contentWindow.parent=undefined; //easily bypassed but like I said, I'm rushing
-    dragElement(ELEM,processHead,processBody.contentWindow)
-    return [ELEM,processBody.contentWindow]
+    dragElement(ELEM,processHead)
+    return ELEM
   }
   async function permissionManage(manifest){ //manages the permissions of an app
     //todo: put a display and let the user choose which permissions
     //what is done right now? grants all permissions ;-;
-    CORE.perms[manifest.name]=make_permissions(manifest.permissions)
+    CORE.perms[manifest.name]=await make_permissions(manifest.permissions)
     localStorage.core=JSON.stringify(CORE)
   }
   async function spawnProcess(path,arg=""){ //returns ID if successful
-    let [curr,next]=traverse(path)
-    let folder=curr[next]
+    let folder=readFolder(path)
     if(typeof folder!=="object") throw 'must give folder of program';
     if(!folder['index.html'] || !folder['manifest.json'])
       throw 'given folder is not a program since a program needs "index.html" and "manifest.json"';
-    let manifest=JSON.parse(folder['manifest.json']), index=folder['index.html']
+    let manifest=JSON.parse(readFile(path+'/manifest.json')), src=SRC(path+'/index.html')
     if(["name","author"].some(key=> typeof manifest[key]!=="string"||manifest[key].length<1 ))
       throw 'in "manifest.json", there must be non-empty STRINGS of "name" and "author"';
     if(!(manifest.permissions instanceof Array)  ||  manifest.permissions.some(perm=> !permissionList[perm] ))
@@ -556,21 +562,7 @@ document.body.appendChild(iframe)*/
     taskbar(path);
     iconCache[path].classList.add('opened')
     //iconCache[path].style="background-color: lightblue;";
-    let ID=processes.length++, [ELEM,WINDOW]=processWrapper(ID,manifest.name,background), controls={__proto__:null};
-    (delete WINDOW.alert, delete WINDOW.prompt, delete WINDOW.confirm); //only put back if prompts permission granted
-    define(WINDOW,'controls',controls)
-    Object.keys(CORE.perms[manifest.name]).forEach(permission=>{
-      console.log([permission,CORE.perms[manifest.name]])
-      permissionFunctions[permission](WINDOW,path)
-    })
-    const BLOB=WINDOW.Blob
-    define(WINDOW,'SRC',function(path){
-      let data=WINDOW.controls.readLocal(path), ext=path.split('.').at(-1).toLowerCase()
-      let url=WINDOW.URL.createObjectURL(new BLOB([str2ab(data)],{type:mimeTypes[ext]||'text/plain'}))
-      setTimeout(_=>WINDOW.URL.revokeObjectURL(url),5e3)
-      return url
-    })
-    define(WINDOW,'ARG',String(arg))
+    let ID=processes.length++, ELEM=processWrapper(ID,manifest.name,background), controls={__proto__:null};
 
     processes[ID]={
       path,
@@ -579,22 +571,15 @@ document.body.appendChild(iframe)*/
       permissions: {...CORE.perms[manifest.name]},
       startTime: Date.now()
     }
-    Object.defineProperty(processes[ID],'APP',{enumerable:false,value:{ELEM,WINDOW}})
-
-    setTimeout(_=>{
-      let html=WINDOW.document.createElement('html')
-      html.innerHTML=index
-      WINDOW.document.write(index)
-      //WINDOW.document.children[0].remove()
-      //WINDOW.document.appendChild(html)
-    })
+    Object.defineProperty(processes[ID],'APP',{enumerable:false,value:ELEM})
+    
     return ID
   }
   function killProcess(id){
-    if(invalidID(id)) throw 'process "id" MUST represent a proper number';
-    if(typeof processes[id]==="undefined") throw 'process does NOT exist';
+    if(invalidID(id)) return false; //process "id" MUST represent a proper number
+    if(typeof processes[id]==="undefined") return false; //process does NOT exist
     let process=processes[id]
-    process.APP.ELEM.remove()
+    process.APP.remove()
     delete processes[id];
     processes.length--;
     if(processes.length===0 || Object.keys(processes).every(ID=>processes[ID].path!==process.path)){
@@ -605,9 +590,11 @@ document.body.appendChild(iframe)*/
       else  iconCache[process.path].classList.remove('opened');
     }
     console.log(processes)
+    return true
   }
   function listProcesses(){
     return JSON.parse(  JSON.stringify(processes)  )
   }
+  //process stuff stop
   //os stuff end
 })()
