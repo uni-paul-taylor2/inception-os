@@ -11,10 +11,16 @@
     </style>
     <script>
       const version = "1.0.0";
-      const script = (localStorage.version===version || localStorage.customOS)?
-        localStorage.main:
+      const CORE = JSON.parse(localStorage.core||'{}')
+      /*
+      CORE comprises of {version,main,css,perms,desktop}
+      */
+      const script = (CORE.version===version || CORE.custom)?
+        CORE.main:
         (await (await fetch(location.href+'main.js')).text() );
-      localStorage.version = version; //version saved in localStorage
+      CORE.main = script
+      CORE.version = version
+      localStorage.CORE = JSON.stringify(CORE) //version saved to localStorage
       eval(script); //load the operating system :D
     </script>
   </head>
