@@ -11,9 +11,10 @@
     </style>
     <script>
       const version = "1.0.0";
-      const script = localStorage.version===version?
+      const script = (localStorage.version===version || localStorage.customOS)?
         localStorage.main:
         (await (await fetch(location.href+'main.js')).text() );
+      localStorage.version = version; //version saved in localStorage
       eval(script); //load the operating system :D
     </script>
   </head>
