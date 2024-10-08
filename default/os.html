@@ -9,12 +9,16 @@
         height: 100%;
       }
     </style>
-    <script defer src="main.js"></script>
+    <script>
+      const version = "1.0.0";
+      const script = localStorage.version===version?
+        localStorage.main:
+        (await (await fetch(location.href+'main.js')).text() );
+      eval(script); //load the operating system :D
+    </script>
   </head>
   <body>
-    <section id="content">
-<!--       <h1>Let's Cook</h1> -->
-    </section>
+    <section id="content"></section>
     <div id="foot">
       <div id="clock" >00:00</div>
     </div>
