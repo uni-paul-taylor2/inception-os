@@ -1,8 +1,5 @@
 let slash=process.platform=="win32"?"\\":"/", dir=__dirname+slash;
 var http=require('node:http'), fs=require('node:fs')
-let {REPL_ID}=process.env
-let html=fs.readFileSync(dir+'index.html')
-.toString().split('\\\\').join(`https://${REPL_ID}.id.repl.co`)
 let ab_map=[], str_map={__proto__:null}
 for(let i=0;i<256;i++){
   ab_map.push(String.fromCharCode(i));
@@ -30,8 +27,8 @@ function read(path){
 }
 const ASSETS=read(dir+'default')
 ASSETS['']=ab2str(fs.readFileSync(DEFAULT+'os.html'))
-ASSETS['applications']=read(dir+'applications')
-ASSETS.applications=JSON.stringify(ASSETS.applications)
+ASSETS['applications']=JSON.stringify( read(dir+'applications') )
+ASSETS['main']=JSON.stringify( read(DEFAULT+'main') )
 
 
 http.createServer(async function(req,res){

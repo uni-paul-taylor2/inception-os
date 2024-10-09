@@ -1,4 +1,4 @@
 {
-  "pinned":["File Viewer/","Browser/","Calculator/", "Snake Xenzia/","Tic-tac-toe/","Clock/"],
+  "pinned":["File Viewer","Browser","Calculator", "Snake Xenzia","Tic-tac-toe","Clock"],
   "background":{"file":true,"src":"wallpapers/beach.jpg"}
 }

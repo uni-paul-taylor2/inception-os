@@ -9,20 +9,36 @@
         height: 100%;
       }
     </style>
-    <script>
-      const version = "1.0.0";
+    <script>(async function(){
+      const get = async(src,parse="text") => await (await fetch(src))[parse]();
       const CORE = JSON.parse(localStorage.core||'{}')
+      CORE.__proto__ = null
+      const source = CORE.source || location.origin //does NOT end with slash
+      const version = await get(source+'/version.txt')
       /*
-      CORE comprises of {version,main,css,perms,desktop}
+        CORE comprises of {source,version,main,css,perms,desktop}
+        every attribute besides main is text, 
       */
-      const script = (CORE.version===version || CORE.custom)?
-        CORE.main:
-        (await (await fetch(location.href+'main.js')).text() );
-      CORE.main = script
+      const scripts = CORE.version===version? CORE.main: await get(source+'/main',"json");
+      
+      //save to localStorage start
+      CORE.main = scripts
+      CORE.source = source
       CORE.version = version
-      localStorage.CORE = JSON.stringify(CORE) //version saved to localStorage
-      eval(script); //load the operating system :D
-    </script>
+      localStorage.core = JSON.stringify(CORE)
+      //save to localStorage stop
+      
+      function require(asset){
+        const myself=arguments.callee
+        if(myself[asset]) return myself[asset];
+        const module={exports:{}}
+        eval(CORE.main[asset] || CORE.main[asset+'.js'] || '')
+        myself[asset] = module.exports
+        return module.exports
+      }
+      
+      require('main.js') //load the operating system :D
+    })()</script>
   </head>
   <body>
     <section id="content"></section>
