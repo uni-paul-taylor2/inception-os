@@ -10,7 +10,11 @@
       }
     </style>
     <script>(async function(){
-      const get = async(src,parse="text") => await (await fetch(src))[parse]();
+      async function get(src,parse="text"){
+        return await (await fetch(
+          src + '?date=' + Date.now()
+        ))[parse]()
+      }
       const CORE = JSON.parse(localStorage.core||'{}')
       CORE.__proto__ = null
       const source = CORE.source || location.origin //does NOT end with slash
@@ -29,11 +33,15 @@
       //save to localStorage stop
       
       function require(asset){
-        const myself=arguments.callee
-        if(myself[asset]) return myself[asset];
+        arguments.callee.cache||={}
+        const myself=arguments.callee.cache
+        if(myself[asset]) return myself[asset].exports;
+        if(myself[asset+'.js']) return myself[asset+'.js'].exports;
         const module={exports:{}}
+        myself[asset] = module
+        if(!myself[asset] && myself[asset+'.js'])
+          myself[asset+'.js'] = module;
         eval(CORE.main[asset] || CORE.main[asset+'.js'] || '')
-        myself[asset] = module.exports
         return module.exports
       }
       
@@ -43,7 +51,7 @@
   <body>
     <section id="content"></section>
     <div id="foot">
-      <div id="clock" >00:00</div>
+      <div id="clock">00:00</div>
     </div>
   </body>
 </html>

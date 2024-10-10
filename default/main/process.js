@@ -111,7 +111,6 @@
       }
       else  iconCache[process.path].classList.remove('opened');
     }
-    console.log(processes)
     return true
   }
   function listProcesses(){

@@ -32,7 +32,6 @@
     return BTOA(ab2str(crypto.getRandomValues(new Uint8Array(32))));
   }
   define(window,'SRC',function(path){
-    console.log(path)
     let data=readFile(path), ext=path.split('.').at(-1).toLowerCase()
     let url=URL.createObjectURL(new Blob([str2ab(data)],{type:mimeTypes[ext]||'text/plain'}))
     setTimeout(_=>URL.revokeObjectURL(url),5e3)

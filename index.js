@@ -32,6 +32,7 @@ ASSETS['main']=JSON.stringify( read(DEFAULT+'main') )
 
 
 http.createServer(async function(req,res){
-  if(req.url[0]==="/") req.url=req.url.substr(1);
-  return res.end(ASSETS[req.url]||''); //simple server for now
+  let {url}=req, pre=Number(url[0]==='/'), post=url.indexOf('?')
+  url = url.substring(pre, post===-1?Infinity:post)
+  return res.end(ASSETS[url]||''); //simple server for now
 }).listen(8080)

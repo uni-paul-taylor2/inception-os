@@ -1,7 +1,6 @@
 (async function(){
   const {mimeTypes,define,BTOA} = require('utils')
   const {readFolder} = require('filesystem')
-  const {spawnProcess} = require('process')
   const clock = document.querySelector("#clock");
   function displayTime() {
     let day = new Date().toLocaleDateString()
@@ -30,9 +29,9 @@
     let elem=document.createElement('div')
     let background=getBackground(path)
     elem.id=BTOA(path)
-    style.innerHTML+=`#${BTOA(path)}{background-image: url("${background}");\n`
+    style.innerHTML+=`\n#${BTOA(path)}{background-image: url("${background}");}`
     elem.classList.add('pinned')
-    elem.onclick=function(){ spawnProcess(path) }
+    elem.onclick=function(){ require('process').spawnProcess(path) }
     elem.title=path.split('/').at(-1)
     iconCache[path]=elem
     foot.appendChild(elem)
@@ -43,8 +42,10 @@
   css=css.split('\\\\').join(background.file?SRC(background.src):background.src)
   style.innerHTML=css
   let {pinned}=CORE.desktop, foot=document.getElementById('foot')
-  document.head.appendChild(style)
-  pinned.forEach(app=> taskbar(app) )
+  function initDisplay(){
+    document.head.appendChild(style)
+    pinned.forEach(app=> taskbar(app) )
+  }
   function dragElement(elmnt,head) { //adapted from https://www.w3schools.com/howto/tryit.asp?filename=tryhow_js_draggable
     let div=document.createElement('div');
     div.style="display:none;width:100%;height:100%;opacity:0;background-color:transparent;z-index:2147483647;position:absolute;";
@@ -102,5 +103,5 @@
       section.onmousemove = null; //document
     }
   }
-  module.exports={dragElement,getBackground,taskbar}
+  module.exports={dragElement,getBackground,taskbar,initDisplay}
 })()

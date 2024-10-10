@@ -22,9 +22,6 @@
   }
   if(!FILESYSTEM.readFolder("")){
     const files=await get(u+'/applications',"json")
-    console.log(files)
-    window.files=files
-    window.fs=FILESYSTEM
     FILESYSTEM.initFileSystem()
     await recursiveWrite(files,"")
     //files=null
@@ -38,5 +35,8 @@
   //each process has SANDBOX logic with permissions through which each process can communicate with other processes and use the FILESYSTEM
   
   
+  DISPLAY.initDisplay()
+  window.fs=FILESYSTEM
+  window.require=require
   module.exports={DISPLAY,PROCESS,SANDBOX,FILESYSTEM,UTILS}
 })()
