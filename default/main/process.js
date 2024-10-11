@@ -1,6 +1,7 @@
 (async function(){
-  //const {define} = require('utils')
-  const {dragElement,taskbar} = require('display')
+  const {define} = require('utils')
+  const {readFolder,readFile} = require('filesystem')
+  const {dragElement,taskbar,getBackground,iconCache,section} = require('display')
   const {permissionList,permissionManage,make_permissions,enforcePermissions} = require('sandbox')
   const processes={__proto__:null} //each process has {path,name,author,permissions,startTime}
   Object.defineProperty(processes,'length',{writable:true,configurable:false,value:0,enumerable:false})
@@ -31,10 +32,10 @@
     buttons.append(unMaximise,maximise,close) //more would come
 
     bold.innerText=NAME
-    close.onclick=function(){ killProcess(ID) }
+    close.onmousedown=function(){ killProcess(ID) }
     close.innerHTML='x';
     close.title='Close'
-    maximise.onclick=function(){
+    maximise.onmousedown=function(){
       if(max) return null;
       (max=true, min=false);
       x=ELEM.offsetHeight;
@@ -52,7 +53,7 @@
     maximise.title='Maximize'
     unMaximise.innerHTML='-';
     unMaximise.title='Minimize'
-    unMaximise.onclick=function(){
+    unMaximise.onmousedown=function(){
       if(min) return null;
       (min=true, max=false);
       clearInterval(s);

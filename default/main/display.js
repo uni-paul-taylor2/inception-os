@@ -103,5 +103,5 @@
       section.onmousemove = null; //document
     }
   }
-  module.exports={dragElement,getBackground,taskbar,initDisplay}
+  module.exports={dragElement,getBackground,taskbar,initDisplay,iconCache,section,style}
 })()
