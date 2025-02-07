@@ -26,7 +26,7 @@ function read(path){
   return folder
 }
 const ASSETS=read(dir+'default')
-ASSETS['']=ab2str(fs.readFileSync(DEFAULT+'os.html'))
+ASSETS['']=ab2str(fs.readFileSync(DEFAULT+'boot.html'))
 ASSETS['applications']=JSON.stringify( read(dir+'applications') )
 ASSETS['main']=JSON.stringify( read(DEFAULT+'main') )
 
